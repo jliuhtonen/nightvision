@@ -40,7 +40,7 @@ export const createLsdpListener = (cb: Callback): (() => void) => {
   const socket = dgram.createSocket("udp4")
 
   socket.on("message", (msg, _rinfo) => {
-    cb(undefined, readLsdpBuffer(msg))
+    cb(undefined, parsePacket(msg))
   })
 
   socket.on("error", err => {
@@ -54,7 +54,7 @@ export const createLsdpListener = (cb: Callback): (() => void) => {
   }
 }
 
-const readLsdpBuffer = (buffer: Buffer): Packet => {
+const parsePacket = (buffer: Buffer): Packet => {
   let currentByte = 0
 
   const length = buffer.readInt8(currentByte++)
@@ -70,7 +70,7 @@ const readLsdpBuffer = (buffer: Buffer): Packet => {
 
   const messageLength = buffer.readInt8(currentByte++)
   const messageBuf = buffer.subarray(currentByte, currentByte + messageLength)
-  const message = readMessageBuffer(messageBuf)
+  const message = parseMessage(messageBuf)
 
   return {
     type: "lsdp",
@@ -78,7 +78,7 @@ const readLsdpBuffer = (buffer: Buffer): Packet => {
   }
 }
 
-const readMessageBuffer = (buffer: Buffer): Message => {
+const parseMessage = (buffer: Buffer): Message => {
   let currentByte = 0
 
   const messageType = buffer.toString("utf8", currentByte++, currentByte)
@@ -97,10 +97,10 @@ const readMessageBuffer = (buffer: Buffer): Message => {
     (currentByte += nodeIdLength)
   )
   const addressLength = buffer.readInt8(currentByte++)
-  const address = readAddress(
+  const address = parseAddress(
     buffer.subarray(currentByte, (currentByte += addressLength))
   )
-  const records = readRecordsBuffer(buffer.subarray(currentByte))
+  const records = parseRecords(buffer.subarray(currentByte))
 
   return {
     type: "announce",
@@ -110,7 +110,7 @@ const readMessageBuffer = (buffer: Buffer): Message => {
   }
 }
 
-const readRecordsBuffer = (buffer: Buffer): AnnounceRecord[] => {
+const parseRecords = (buffer: Buffer): AnnounceRecord[] => {
   let currentByte = 0
   const recordCount = buffer.readInt8(currentByte++)
 
@@ -142,7 +142,7 @@ const readRecordsBuffer = (buffer: Buffer): AnnounceRecord[] => {
   return records
 }
 
-const readAddress = (buffer: Buffer): string => {
+const parseAddress = (buffer: Buffer): string => {
   return new Uint8Array(buffer).join(".")
 }
 
