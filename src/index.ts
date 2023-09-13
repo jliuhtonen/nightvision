@@ -1,5 +1,6 @@
 import assert from "node:assert"
 import dgram from "node:dgram"
+import { concatTimes } from "./util.js"
 
 const LSDP_PORT = 11430
 const HEADER_LENGTH_BYTES = 6
@@ -93,15 +94,12 @@ const readMessageBuffer = (buffer: Buffer): Message => {
 
 const readRecordsBuffer = (buffer: Buffer): AnnounceRecord[] => {
   let currentByte = 0
-
   const recordCount = buffer.readInt8(currentByte++)
-  const records = []
 
-  for (let j = 0; j < recordCount; j++) {
+  const records = concatTimes(recordCount, () => {
     const classId = buffer.toString("hex", currentByte, (currentByte += 2))
     const txtCount = buffer.readInt8(currentByte++)
-    const txtRecords = []
-    for (let k = 0; k < txtCount; k++) {
+    const txtRecords = concatTimes(txtCount, () => {
       const keyLength = buffer.readInt8(currentByte++)
       const key = buffer.toString(
         "utf8",
@@ -114,10 +112,14 @@ const readRecordsBuffer = (buffer: Buffer): AnnounceRecord[] => {
         currentByte,
         (currentByte += valueLength)
       )
-      txtRecords.push([key, value])
+      return [key, value]
+    })
+
+    return {
+      classId,
+      txtRecords: Object.fromEntries(txtRecords),
     }
-    records.push({ classId, txtRecords: Object.fromEntries(txtRecords) })
-  }
+  })
 
   return records
 }
