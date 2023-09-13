@@ -14,6 +14,12 @@ export interface AnnounceMessage {
   messageType: string
   nodeId: string
   address: string
+  records: AnnounceRecord[]
+}
+
+export interface AnnounceRecord {
+  classId: string
+  txtRecords: Record<string, string>
 }
 
 export type LSDPCallback = (error?: Error, result?: LSDPEnvelope) => void
@@ -61,12 +67,28 @@ const readMessageBuffer = (buffer: Buffer): LSDPMessage => {
   const nodeId = buffer.toString("hex", i, (i += nodeIdLength))
   const addressLength = buffer.readInt8(i++)
   const address = readAddress(buffer.subarray(i, (i += addressLength)))
-  // const recordCount = buffer.readInt8(i++)
+  const recordCount = buffer.readInt8(i++)
+  const records = []
+
+  for (let j = 0; j < recordCount; j++) {
+    const classId = buffer.toString("hex", i, (i += 2))
+    const txtCount = buffer.readInt8(i++)
+    const txtRecords = []
+    for (let k = 0; k < txtCount; k++) {
+      const keyLength = buffer.readInt8(i++)
+      const key = buffer.toString("utf8", i, (i += keyLength))
+      const valueLength = buffer.readInt8(i++)
+      const value = buffer.toString("utf8", i, (i += valueLength))
+      txtRecords.push([key, value])
+    }
+    records.push({ classId, txtRecords: Object.fromEntries(txtRecords) })
+  }
 
   return {
     messageType,
     nodeId,
     address,
+    records,
   }
 }
 
@@ -79,5 +101,5 @@ createLsdpListener((err, result) => {
     console.error(err)
     return
   }
-  console.log(result)
+  console.log(JSON.stringify(result, null, 2))
 })
