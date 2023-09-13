@@ -22,11 +22,3 @@ export const createLsdpListener = (cb: Callback): (() => void) => {
     socket.close()
   }
 }
-
-createLsdpListener((err, result) => {
-  if (err) {
-    console.error(err)
-    return
-  }
-  console.log(JSON.stringify(result, null, 2))
-})
