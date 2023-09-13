@@ -2,6 +2,7 @@ import assert from "node:assert"
 import dgram from "node:dgram"
 
 const LSDP_PORT = 11430
+const HEADER_LENGTH_BYTES = 6
 
 export interface Envelope {
   magicWord: string
@@ -47,7 +48,7 @@ const readLsdpBuffer = (buffer: Buffer): Envelope => {
   let currentByte = 0
 
   const length = buffer.readInt8(currentByte++)
-  assert.strictEqual(length, buffer.length)
+  assert.strictEqual(length, HEADER_LENGTH_BYTES)
 
   const magicWord = buffer.toString("utf8", currentByte, (currentByte += 4))
   assert.strictEqual(magicWord, "LSDP")
