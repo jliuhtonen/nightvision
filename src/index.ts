@@ -1,14 +1,18 @@
-import assert from "node:assert"
 import dgram from "node:dgram"
 import { concatTimes } from "./util.js"
 
 const LSDP_PORT = 11430
 const HEADER_LENGTH_BYTES = 6
 
-export interface Envelope {
-  magicWord: string
-  protocolVersion: number
+export type Packet = LSDPPacket | UnknownPacket
+
+export interface LSDPPacket {
+  type: "lsdp"
   message: Message
+}
+
+export interface UnknownPacket {
+  type: "unknown"
 }
 
 export type Message = AnnounceMessage | UnknownMessage
@@ -30,7 +34,7 @@ export interface AnnounceRecord {
   txtRecords: Record<string, string>
 }
 
-export type Callback = (error?: Error, result?: Envelope) => void
+export type Callback = (error?: Error, result?: Packet) => void
 
 export const createLsdpListener = (cb: Callback): (() => void) => {
   const socket = dgram.createSocket("udp4")
@@ -50,25 +54,26 @@ export const createLsdpListener = (cb: Callback): (() => void) => {
   }
 }
 
-const readLsdpBuffer = (buffer: Buffer): Envelope => {
+const readLsdpBuffer = (buffer: Buffer): Packet => {
   let currentByte = 0
 
   const length = buffer.readInt8(currentByte++)
-  assert.strictEqual(length, HEADER_LENGTH_BYTES)
-
   const magicWord = buffer.toString("utf8", currentByte, (currentByte += 4))
-  assert.strictEqual(magicWord, "LSDP")
-
   const protocolVersion = buffer.readInt8(currentByte++)
-  assert.strictEqual(protocolVersion, 1)
+  if (
+    magicWord !== "LSDP" ||
+    length !== HEADER_LENGTH_BYTES ||
+    protocolVersion !== 1
+  ) {
+    return { type: "unknown" }
+  }
 
   const messageLength = buffer.readInt8(currentByte++)
   const messageBuf = buffer.subarray(currentByte, currentByte + messageLength)
   const message = readMessageBuffer(messageBuf)
 
   return {
-    magicWord,
-    protocolVersion,
+    type: "lsdp",
     message,
   }
 }
