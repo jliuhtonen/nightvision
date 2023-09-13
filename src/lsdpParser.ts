@@ -1,4 +1,4 @@
-import { concatTimes } from "./util.js"
+import { concatTimes } from "./util"
 
 const HEADER_LENGTH_BYTES = 6
 

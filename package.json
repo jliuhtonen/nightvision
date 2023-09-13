@@ -4,7 +4,7 @@
   "description": "Implementation of Lenbrook Service Discovery Protocol",
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --require ts-node/register --test ./test/*.test.ts"
   },
   "author": "Janne Liuhtonen",
   "license": "MIT",
@@ -15,6 +15,7 @@
   ],
   "devDependencies": {
     "@types/node": "^20.6.0",
+    "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
   }
 }
