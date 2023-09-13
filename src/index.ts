@@ -1,3 +1,4 @@
+import assert from "node:assert"
 import dgram from "node:dgram"
 
 const LSDP_PORT = 11430
@@ -45,9 +46,15 @@ export const createLsdpListener = (cb: LSDPCallback): (() => void) => {
 const readLsdpBuffer = (buffer: Buffer): LSDPEnvelope => {
   let i = 0
 
-  buffer.readInt8(i++) // length
+  const length = buffer.readInt8(i++)
+  assert.strictEqual(length, buffer.length)
+
   const magicWord = buffer.toString("utf8", i, (i += 4))
+  assert.strictEqual(magicWord, "LSDP")
+
   const protocolVersion = buffer.readInt8(i++)
+  assert.strictEqual(protocolVersion, 1)
+
   const messageLength = buffer.readInt8(i++)
   const messageBuf = buffer.subarray(i, i + messageLength)
   const message = readMessageBuffer(messageBuf)
@@ -67,6 +74,19 @@ const readMessageBuffer = (buffer: Buffer): LSDPMessage => {
   const nodeId = buffer.toString("hex", i, (i += nodeIdLength))
   const addressLength = buffer.readInt8(i++)
   const address = readAddress(buffer.subarray(i, (i += addressLength)))
+  const records = readRecordsBuffer(buffer.subarray(i))
+
+  return {
+    messageType,
+    nodeId,
+    address,
+    records,
+  }
+}
+
+const readRecordsBuffer = (buffer: Buffer): AnnounceRecord[] => {
+  let i = 0
+
   const recordCount = buffer.readInt8(i++)
   const records = []
 
@@ -84,12 +104,7 @@ const readMessageBuffer = (buffer: Buffer): LSDPMessage => {
     records.push({ classId, txtRecords: Object.fromEntries(txtRecords) })
   }
 
-  return {
-    messageType,
-    nodeId,
-    address,
-    records,
-  }
+  return records
 }
 
 const readAddress = (buffer: Buffer): string => {
