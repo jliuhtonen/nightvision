@@ -3,13 +3,13 @@ import dgram from "node:dgram"
 
 const LSDP_PORT = 11430
 
-export interface LSDPEnvelope {
+export interface Envelope {
   magicWord: string
   protocolVersion: number
-  message: LSDPMessage
+  message: Message
 }
 
-export type LSDPMessage = AnnounceMessage
+export type Message = AnnounceMessage
 
 export interface AnnounceMessage {
   messageType: string
@@ -23,9 +23,9 @@ export interface AnnounceRecord {
   txtRecords: Record<string, string>
 }
 
-export type LSDPCallback = (error?: Error, result?: LSDPEnvelope) => void
+export type Callback = (error?: Error, result?: Envelope) => void
 
-export const createLsdpListener = (cb: LSDPCallback): (() => void) => {
+export const createLsdpListener = (cb: Callback): (() => void) => {
   const socket = dgram.createSocket("udp4")
 
   socket.on("message", (msg, _rinfo) => {
@@ -43,20 +43,20 @@ export const createLsdpListener = (cb: LSDPCallback): (() => void) => {
   }
 }
 
-const readLsdpBuffer = (buffer: Buffer): LSDPEnvelope => {
-  let i = 0
+const readLsdpBuffer = (buffer: Buffer): Envelope => {
+  let currentByte = 0
 
-  const length = buffer.readInt8(i++)
+  const length = buffer.readInt8(currentByte++)
   assert.strictEqual(length, buffer.length)
 
-  const magicWord = buffer.toString("utf8", i, (i += 4))
+  const magicWord = buffer.toString("utf8", currentByte, (currentByte += 4))
   assert.strictEqual(magicWord, "LSDP")
 
-  const protocolVersion = buffer.readInt8(i++)
+  const protocolVersion = buffer.readInt8(currentByte++)
   assert.strictEqual(protocolVersion, 1)
 
-  const messageLength = buffer.readInt8(i++)
-  const messageBuf = buffer.subarray(i, i + messageLength)
+  const messageLength = buffer.readInt8(currentByte++)
+  const messageBuf = buffer.subarray(currentByte, currentByte + messageLength)
   const message = readMessageBuffer(messageBuf)
 
   return {
@@ -66,15 +66,21 @@ const readLsdpBuffer = (buffer: Buffer): LSDPEnvelope => {
   }
 }
 
-const readMessageBuffer = (buffer: Buffer): LSDPMessage => {
-  let i = 0
+const readMessageBuffer = (buffer: Buffer): Message => {
+  let currentByte = 0
 
-  const messageType = buffer.toString("utf8", i++, i)
-  const nodeIdLength = buffer.readInt8(i++)
-  const nodeId = buffer.toString("hex", i, (i += nodeIdLength))
-  const addressLength = buffer.readInt8(i++)
-  const address = readAddress(buffer.subarray(i, (i += addressLength)))
-  const records = readRecordsBuffer(buffer.subarray(i))
+  const messageType = buffer.toString("utf8", currentByte++, currentByte)
+  const nodeIdLength = buffer.readInt8(currentByte++)
+  const nodeId = buffer.toString(
+    "hex",
+    currentByte,
+    (currentByte += nodeIdLength)
+  )
+  const addressLength = buffer.readInt8(currentByte++)
+  const address = readAddress(
+    buffer.subarray(currentByte, (currentByte += addressLength))
+  )
+  const records = readRecordsBuffer(buffer.subarray(currentByte))
 
   return {
     messageType,
@@ -85,20 +91,28 @@ const readMessageBuffer = (buffer: Buffer): LSDPMessage => {
 }
 
 const readRecordsBuffer = (buffer: Buffer): AnnounceRecord[] => {
-  let i = 0
+  let currentByte = 0
 
-  const recordCount = buffer.readInt8(i++)
+  const recordCount = buffer.readInt8(currentByte++)
   const records = []
 
   for (let j = 0; j < recordCount; j++) {
-    const classId = buffer.toString("hex", i, (i += 2))
-    const txtCount = buffer.readInt8(i++)
+    const classId = buffer.toString("hex", currentByte, (currentByte += 2))
+    const txtCount = buffer.readInt8(currentByte++)
     const txtRecords = []
     for (let k = 0; k < txtCount; k++) {
-      const keyLength = buffer.readInt8(i++)
-      const key = buffer.toString("utf8", i, (i += keyLength))
-      const valueLength = buffer.readInt8(i++)
-      const value = buffer.toString("utf8", i, (i += valueLength))
+      const keyLength = buffer.readInt8(currentByte++)
+      const key = buffer.toString(
+        "utf8",
+        currentByte,
+        (currentByte += keyLength)
+      )
+      const valueLength = buffer.readInt8(currentByte++)
+      const value = buffer.toString(
+        "utf8",
+        currentByte,
+        (currentByte += valueLength)
+      )
       txtRecords.push([key, value])
     }
     records.push({ classId, txtRecords: Object.fromEntries(txtRecords) })
