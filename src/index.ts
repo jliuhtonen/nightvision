@@ -11,13 +11,18 @@ export interface Envelope {
   message: Message
 }
 
-export type Message = AnnounceMessage
+export type Message = AnnounceMessage | UnknownMessage
 
 export interface AnnounceMessage {
-  messageType: string
+  type: "announce"
   nodeId: string
   address: string
   records: AnnounceRecord[]
+}
+
+export interface UnknownMessage {
+  type: "unknown"
+  messageType: string
 }
 
 export interface AnnounceRecord {
@@ -72,6 +77,14 @@ const readMessageBuffer = (buffer: Buffer): Message => {
   let currentByte = 0
 
   const messageType = buffer.toString("utf8", currentByte++, currentByte)
+
+  if (messageType !== "A") {
+    return {
+      type: "unknown",
+      messageType,
+    }
+  }
+
   const nodeIdLength = buffer.readInt8(currentByte++)
   const nodeId = buffer.toString(
     "hex",
@@ -85,7 +98,7 @@ const readMessageBuffer = (buffer: Buffer): Message => {
   const records = readRecordsBuffer(buffer.subarray(currentByte))
 
   return {
-    messageType,
+    type: "announce",
     nodeId,
     address,
     records,
