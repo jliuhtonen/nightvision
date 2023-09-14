@@ -16,7 +16,6 @@ export const createLsdpListener = (cb: Callback): Promise<Connection> => {
   const socket = dgram.createSocket("udp4")
 
   socket.on("message", (msg, _rinfo) => {
-    console.log(msg.toString("hex"))
     cb(undefined, parsePacket(msg))
   })
 
