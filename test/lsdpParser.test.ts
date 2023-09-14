@@ -51,4 +51,18 @@ describe("LSDP parser", () => {
       },
     })
   })
+  it("should parse query message", () => {
+    const hexPacket = "064c5344500173510200010004"
+    const buffer = Buffer.from(hexPacket, "hex")
+    const packet = parsePacket(buffer)
+
+    assert.deepEqual(packet, {
+      type: "lsdp",
+      message: {
+        type: "query",
+        messageType: "standard",
+        classIds: ["0001", "0004"],
+      },
+    })
+  })
 })

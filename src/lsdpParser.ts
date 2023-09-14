@@ -1,7 +1,13 @@
-import { Packet } from "./model"
+import {
+  AnnounceMessage,
+  AnnounceRecord,
+  DeleteMessage,
+  HEADER_LENGTH_BYTES,
+  Message,
+  PROTOCOL_VERSION,
+  Packet,
+} from "./model"
 import { concatTimes } from "./util"
-
-const HEADER_LENGTH_BYTES = 6
 
 export const parsePacket = (buffer: Buffer): Packet => {
   let currentByte = 0
@@ -12,7 +18,7 @@ export const parsePacket = (buffer: Buffer): Packet => {
   if (
     magicWord !== "LSDP" ||
     length !== HEADER_LENGTH_BYTES ||
-    protocolVersion !== 1
+    protocolVersion !== PROTOCOL_VERSION
   ) {
     return { type: "unknown" }
   }
@@ -37,6 +43,9 @@ const parseMessage = (buffer: Buffer): Message => {
       return parseAnnounceMessage(buffer.subarray(currentByte))
     case "D":
       return parseDeleteMessage(buffer.subarray(currentByte))
+    case "Q":
+    case "R":
+      return parseQueryMessage(buffer.subarray(currentByte), messageType)
     default:
       return {
         type: "unknown",
@@ -85,6 +94,20 @@ const parseDeleteMessage = (buffer: Buffer): DeleteMessage => {
   return {
     type: "delete",
     nodeId,
+    classIds,
+  }
+}
+
+const parseQueryMessage = (buffer: Buffer, messageType: string): Message => {
+  let currentByte = 0
+
+  const classIdCount = buffer.readInt8(currentByte++)
+  const classIds = concatTimes(classIdCount, () =>
+    buffer.toString("hex", currentByte, (currentByte += 2))
+  )
+  return {
+    type: "query",
+    messageType: messageType === "Q" ? "standard" : "unicast",
     classIds,
   }
 }
