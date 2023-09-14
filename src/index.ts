@@ -2,7 +2,6 @@ import dgram from "node:dgram"
 import { parsePacket } from "./lsdpParser"
 import { Packet, QueryMessage } from "./model"
 import { composeQuery } from "./lsdpComposer"
-import { concatTimes } from "./util"
 
 const LSDP_PORT = 11430
 export type Callback = (error?: Error, result?: Packet) => void
