@@ -37,4 +37,18 @@ describe("LSDP parser", () => {
       },
     })
   })
+  it("should parse delete message", () => {
+    const hexPacket = "064c534450017344069076824274c40200010004"
+    const buffer = Buffer.from(hexPacket, "hex")
+    const packet = parsePacket(buffer)
+
+    assert.deepEqual(packet, {
+      type: "lsdp",
+      message: {
+        type: "delete",
+        nodeId: "9076824274c4",
+        classIds: ["0001", "0004"],
+      },
+    })
+  })
 })

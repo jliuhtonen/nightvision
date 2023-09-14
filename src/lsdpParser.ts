@@ -13,13 +13,19 @@ export interface UnknownPacket {
   type: "unknown"
 }
 
-export type Message = AnnounceMessage | UnknownMessage
+export type Message = AnnounceMessage | DeleteMessage | UnknownMessage
 
 export interface AnnounceMessage {
   type: "announce"
   nodeId: string
   address: string
   records: AnnounceRecord[]
+}
+
+export interface DeleteMessage {
+  type: "delete"
+  nodeId: string
+  classIds: string[]
 }
 
 export interface UnknownMessage {
@@ -61,12 +67,21 @@ const parseMessage = (buffer: Buffer): Message => {
 
   const messageType = buffer.toString("utf8", currentByte++, currentByte)
 
-  if (messageType !== "A") {
-    return {
-      type: "unknown",
-      messageType,
-    }
+  switch (messageType) {
+    case "A":
+      return parseAnnounceMessage(buffer.subarray(currentByte))
+    case "D":
+      return parseDeleteMessage(buffer.subarray(currentByte))
+    default:
+      return {
+        type: "unknown",
+        messageType,
+      }
   }
+}
+
+const parseAnnounceMessage = (buffer: Buffer): AnnounceMessage => {
+  let currentByte = 0
 
   const nodeIdLength = buffer.readInt8(currentByte++)
   const nodeId = buffer.toString(
@@ -85,6 +100,27 @@ const parseMessage = (buffer: Buffer): Message => {
     nodeId,
     address,
     records,
+  }
+}
+
+const parseDeleteMessage = (buffer: Buffer): DeleteMessage => {
+  let currentByte = 0
+
+  const nodeIdLength = buffer.readInt8(currentByte++)
+  const nodeId = buffer.toString(
+    "hex",
+    currentByte,
+    (currentByte += nodeIdLength)
+  )
+  const classIdCount = buffer.readInt8(currentByte++)
+  const classIds = concatTimes(classIdCount, () => {
+    return buffer.toString("hex", currentByte, (currentByte += 2))
+  })
+
+  return {
+    type: "delete",
+    nodeId,
+    classIds,
   }
 }
 
