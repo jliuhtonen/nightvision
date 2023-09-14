@@ -1,5 +1,6 @@
 import dgram from "node:dgram"
-import { Packet, parsePacket } from "./lsdpParser"
+import { parsePacket } from "./lsdpParser"
+import { Packet } from "./model"
 
 const LSDP_PORT = 11430
 export type Callback = (error?: Error, result?: Packet) => void
