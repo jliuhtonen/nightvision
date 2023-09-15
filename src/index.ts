@@ -57,3 +57,5 @@ export const createConnection = (): Promise<Connection> => {
     })
   })
 }
+
+export * from "./model"
