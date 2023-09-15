@@ -1,11 +1,19 @@
-export const concatTimes = <T>(n: number, cb: (i: number) => T): T[] => {
-  const result: T[] = []
+import { networkInterfaces, NetworkInterfaceInfo } from "os"
 
-  for (let i = 0; i < n; i++) {
-    result.push(cb(i))
-  }
+export interface NetworkInterface {
+  address: string
+  netmask: string
+}
 
-  return result
+export const getNonLoopbackInterfaces = (): NetworkInterface[] => {
+  const interfaces = networkInterfaces()
+  return Object.values(interfaces)
+    .flat()
+    .filter(
+      (iface): iface is NetworkInterfaceInfo =>
+        iface !== undefined && iface.family === "IPv4" && !iface.internal
+    )
+    .map(({ address, netmask }) => ({ address, netmask }))
 }
 
 export const getBroadcastIp = (ip: string, subnetMask: string): string => {
