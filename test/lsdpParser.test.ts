@@ -38,7 +38,7 @@ describe("LSDP parser", () => {
     })
   })
   it("should parse delete message", () => {
-    const hexPacket = "064c534450017344069076824274c40200010004"
+    const hexPacket = "064c534450010e44069076824274c40200010004"
     const buffer = Buffer.from(hexPacket, "hex")
     const packet = parsePacket(buffer)
 
@@ -52,7 +52,7 @@ describe("LSDP parser", () => {
     })
   })
   it("should parse query message", () => {
-    const hexPacket = "064c5344500173510200010004"
+    const hexPacket = "064c5344500107510200010004"
     const buffer = Buffer.from(hexPacket, "hex")
     const packet = parsePacket(buffer)
 
