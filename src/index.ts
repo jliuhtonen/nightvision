@@ -1,20 +1,25 @@
 import dgram from "node:dgram"
 import { parsePacket } from "./lsdpParser"
-import { Packet, QueryMessage } from "./model"
-import { composeQuery } from "./lsdpComposer"
-import { getNonLoopbackInterfaces, getBroadcastIp } from "./network"
+import { Message, Packet } from "./model"
+import { composeMessage } from "./lsdpComposer"
+import { getBroadcastIp, getNonLoopbackInterfaces } from "./network"
 
 const LSDP_PORT = 11430
+const loopbackInterface = { address: "127.0.0.1", netmask: "255.255.255.255" }
+
 export type Callback = (error?: Error, result?: Packet) => void
 
 export interface Connection {
   close: () => void
-  query: (query: QueryMessage) => Promise<void>
+  sendMessage: (msg: Message) => Promise<void>
   onData: (cb: Callback) => void
 }
 
-export const createConnection = (): Promise<Connection> => {
-  const broadcastIps = getNonLoopbackInterfaces().map(iface =>
+export const createConnection = (loopbackOnly = false): Promise<Connection> => {
+  const interfaces = loopbackOnly
+    ? [loopbackInterface]
+    : getNonLoopbackInterfaces()
+  const broadcastIps = interfaces.map(iface =>
     getBroadcastIp(iface.address, iface.netmask)
   )
   const socket = dgram.createSocket("udp4")
@@ -35,8 +40,8 @@ export const createConnection = (): Promise<Connection> => {
     socket.bind(LSDP_PORT, () => {
       socket.setBroadcast(true)
       resolve({
-        async query(query: QueryMessage): Promise<void> {
-          const buffer = composeQuery(query)
+        async sendMessage(msg: Message): Promise<void> {
+          const buffer = composeMessage(msg)
           await Promise.all(
             broadcastIps.map(broadcastIp => sendDatagram(buffer, broadcastIp))
           )

@@ -10,7 +10,7 @@ createConnection().then(conn => {
   })
 
   conn
-    .query({ type: "query", messageType: "standard", classIds: ["0001"] })
+    .sendMessage({ type: "query", messageType: "standard", classIds: ["0001"] })
     .then(() => {
       console.log("query sent")
     })

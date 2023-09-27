@@ -1,22 +1,20 @@
 export const HEADER_LENGTH_BYTES = 6
 export const PROTOCOL_VERSION = 1
 
-export type Packet = LSDPPacket | UnknownPacket
+export type Packet = ReceivedPacket | UnknownPacket
 
-export interface LSDPPacket {
+export interface ReceivedPacket {
   type: "lsdp"
-  message: Message
+  message: ReceivedMessage
 }
 
 export interface UnknownPacket {
   type: "unknown"
 }
 
-export type Message =
-  | AnnounceMessage
-  | DeleteMessage
-  | QueryMessage
-  | UnknownMessage
+export type ReceivedMessage = Message | UnknownMessage
+
+export type Message = AnnounceMessage | DeleteMessage | QueryMessage
 
 export interface AnnounceMessage {
   type: "announce"
