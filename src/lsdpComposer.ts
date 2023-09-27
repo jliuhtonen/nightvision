@@ -1,5 +1,6 @@
 import {
   AnnounceMessage,
+  DeleteMessage,
   HEADER_LENGTH_BYTES,
   PROTOCOL_VERSION,
   QueryMessage,
@@ -61,6 +62,35 @@ export const composeAnnounce = (announce: AnnounceMessage): Buffer => {
       buffer.writeInt8(value.length, currentByte++)
       buffer.write(value, currentByte, (currentByte += value.length), "utf8")
     })
+  })
+
+  return buffer
+}
+
+export const composeDelete = (deleteMessage: DeleteMessage): Buffer => {
+  const messageLength =
+    HEADER_LENGTH_BYTES +
+    4 +
+    deleteMessage.nodeId.length / 2 +
+    deleteMessage.classIds.length * 2
+  const buffer = Buffer.alloc(messageLength)
+  let currentByte = 0
+
+  buffer.writeInt8(HEADER_LENGTH_BYTES, currentByte++)
+  buffer.write("LSDP", currentByte, (currentByte += 4), "utf8")
+  buffer.writeInt8(PROTOCOL_VERSION, currentByte++)
+  buffer.writeInt8(messageLength - HEADER_LENGTH_BYTES, currentByte++)
+  buffer.write("D", currentByte++, 1, "utf8")
+  buffer.writeInt8(deleteMessage.nodeId.length / 2, currentByte++)
+  buffer.write(
+    deleteMessage.nodeId,
+    currentByte,
+    (currentByte += deleteMessage.nodeId.length / 2),
+    "hex"
+  )
+  buffer.writeInt8(deleteMessage.classIds.length, currentByte++)
+  deleteMessage.classIds.forEach(classId => {
+    buffer.write(classId, currentByte, (currentByte += 2), "hex")
   })
 
   return buffer

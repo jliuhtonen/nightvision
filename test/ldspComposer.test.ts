@@ -1,6 +1,10 @@
 import { describe, it } from "node:test"
-import { AnnounceMessage, QueryMessage } from "../src/model"
-import { composeAnnounce, composeQuery } from "../src/lsdpComposer"
+import { AnnounceMessage, DeleteMessage, QueryMessage } from "../src/model"
+import {
+  composeAnnounce,
+  composeDelete,
+  composeQuery,
+} from "../src/lsdpComposer"
 import assert from "node:assert"
 
 describe("LSDP composer", () => {
@@ -43,6 +47,19 @@ describe("LSDP composer", () => {
     assert.strictEqual(
       buffer.toString("hex"),
       "064c534450017341069076824274c404c0a80a0a02000105046e616d650e426c7565736f756e64204e6f646504706f7274053131303030056d6f64656c044e3133300776657273696f6e07332e32302e3532027a730130000402046e616d650e426c7565736f756e64204e6f646504706f7274053131343331"
+    )
+  })
+
+  it("should compose delete message", () => {
+    const deleteMessage: DeleteMessage = {
+      type: "delete",
+      nodeId: "9076824274c4",
+      classIds: ["0001", "0004"],
+    }
+    const buffer = composeDelete(deleteMessage)
+    assert.strictEqual(
+      buffer.toString("hex"),
+      "064c534450010e44069076824274c40200010004"
     )
   })
 })
