@@ -6,6 +6,7 @@ import {
   Message,
   PROTOCOL_VERSION,
   Packet,
+  ReceivedMessage,
 } from "./model"
 import { concatTimes } from "./util"
 
@@ -33,7 +34,7 @@ export const parsePacket = (buffer: Buffer): Packet => {
   }
 }
 
-const parseMessage = (buffer: Buffer): Message => {
+const parseMessage = (buffer: Buffer): ReceivedMessage => {
   let currentByte = 0
 
   const messageType = buffer.toString("utf8", currentByte++, currentByte)

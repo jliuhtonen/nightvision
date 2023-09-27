@@ -2,6 +2,7 @@ import {
   AnnounceMessage,
   DeleteMessage,
   HEADER_LENGTH_BYTES,
+  Message,
   PROTOCOL_VERSION,
   QueryMessage,
 } from "./model"
@@ -115,6 +116,17 @@ export const composeQuery = (query: QueryMessage): Buffer => {
     buffer.write(classId, currentByte, (currentByte += 2), "hex")
   })
   return buffer
+}
+
+export const composeMessage = (message: Message): Buffer => {
+  switch (message.type) {
+    case "announce":
+      return composeAnnounce(message)
+    case "delete":
+      return composeDelete(message)
+    case "query":
+      return composeQuery(message)
+  }
 }
 
 export const composeQueryType = (queryType: "standard" | "unicast"): string => {

@@ -1,7 +1,7 @@
 import dgram from "node:dgram"
 import { parsePacket } from "./lsdpParser"
-import { Packet, QueryMessage } from "./model"
-import { composeQuery } from "./lsdpComposer"
+import { Message, Packet } from "./model"
+import { composeMessage } from "./lsdpComposer"
 import { getNonLoopbackInterfaces, getBroadcastIp } from "./network"
 
 const LSDP_PORT = 11430
@@ -9,7 +9,7 @@ export type Callback = (error?: Error, result?: Packet) => void
 
 export interface Connection {
   close: () => void
-  query: (query: QueryMessage) => Promise<void>
+  sendMessage: (msg: Message) => Promise<void>
   onData: (cb: Callback) => void
 }
 
@@ -35,8 +35,8 @@ export const createConnection = (): Promise<Connection> => {
     socket.bind(LSDP_PORT, () => {
       socket.setBroadcast(true)
       resolve({
-        async query(query: QueryMessage): Promise<void> {
-          const buffer = composeQuery(query)
+        async sendMessage(msg: Message): Promise<void> {
+          const buffer = composeMessage(msg)
           await Promise.all(
             broadcastIps.map(broadcastIp => sendDatagram(buffer, broadcastIp))
           )
