@@ -30,14 +30,21 @@ const calculateAnnounceLengthBytes = (announce: AnnounceMessage): number =>
     0
   )
 
-export const composeAnnounce = (announce: AnnounceMessage): Buffer => {
-  const messageLength = calculateAnnounceLengthBytes(announce)
-  const buffer = Buffer.alloc(messageLength)
+const writeHeader = (buffer: Buffer): void => {
   let currentByte = 0
 
   buffer.writeInt8(HEADER_LENGTH_BYTES, currentByte++)
   buffer.write("LSDP", currentByte, (currentByte += 4), "utf8")
   buffer.writeInt8(PROTOCOL_VERSION, currentByte++)
+}
+
+export const composeAnnounce = (announce: AnnounceMessage): Buffer => {
+  const messageLength = calculateAnnounceLengthBytes(announce)
+  const buffer = Buffer.alloc(messageLength)
+
+  writeHeader(buffer.subarray(0, HEADER_LENGTH_BYTES))
+
+  let currentByte = HEADER_LENGTH_BYTES
 
   buffer.writeInt8(messageLength - HEADER_LENGTH_BYTES, currentByte++)
   buffer.write("A", currentByte++, 1, "utf8")
@@ -75,11 +82,10 @@ export const composeDelete = (deleteMessage: DeleteMessage): Buffer => {
     deleteMessage.nodeId.length / 2 +
     deleteMessage.classIds.length * 2
   const buffer = Buffer.alloc(messageLength)
-  let currentByte = 0
 
-  buffer.writeInt8(HEADER_LENGTH_BYTES, currentByte++)
-  buffer.write("LSDP", currentByte, (currentByte += 4), "utf8")
-  buffer.writeInt8(PROTOCOL_VERSION, currentByte++)
+  writeHeader(buffer.subarray(0, HEADER_LENGTH_BYTES))
+  let currentByte = HEADER_LENGTH_BYTES
+
   buffer.writeInt8(messageLength - HEADER_LENGTH_BYTES, currentByte++)
   buffer.write("D", currentByte++, 1, "utf8")
   buffer.writeInt8(deleteMessage.nodeId.length / 2, currentByte++)
@@ -101,11 +107,9 @@ export const composeQuery = (query: QueryMessage): Buffer => {
   const buffer = Buffer.alloc(
     HEADER_LENGTH_BYTES + QUERY_BASE_LENGTH_BYTES + query.classIds.length * 2
   )
-  let currentByte = 0
+  writeHeader(buffer.subarray(0, HEADER_LENGTH_BYTES))
+  let currentByte = HEADER_LENGTH_BYTES
 
-  buffer.writeInt8(HEADER_LENGTH_BYTES, currentByte++)
-  buffer.write("LSDP", currentByte, (currentByte += 4), "utf8")
-  buffer.writeInt8(PROTOCOL_VERSION, currentByte++)
   buffer.writeInt8(
     QUERY_BASE_LENGTH_BYTES + query.classIds.length * 2,
     currentByte++
