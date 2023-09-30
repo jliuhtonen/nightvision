@@ -22,7 +22,11 @@ conn.onData((err, result) => {
   console.log(JSON.stringify(result, null, 2))
 })
 
-await conn.query({ type: "query", messageType: "standard", classIds: ["0001"] })
+await conn.sendMessage({
+  type: "query",
+  messageType: "standard",
+  classIds: ["0001"],
+})
 ```
 
 As mentioned in the specification, the guideline is to send startup messages 7 times within certain time interval and delays.
