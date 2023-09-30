@@ -39,7 +39,7 @@ describe("Connection", () => {
     const receivedPackets: Packet[] = []
 
     try {
-      connection = await createConnection(true)
+      connection = await createConnection({ loopbackOnly: true })
       connection.onData((err, packet) => {
         if (err) {
           throw err

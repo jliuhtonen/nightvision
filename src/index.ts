@@ -5,7 +5,7 @@ import { composeMessage } from "./lsdpComposer"
 import { getBroadcastIp, getNonLoopbackInterfaces } from "./network"
 
 const LSDP_PORT = 11430
-const loopbackInterface = { address: "127.0.0.1", netmask: "255.255.255.255" }
+const LOOPBACK_IP = "127.0.0.1"
 
 export type Callback = (error?: Error, result?: Packet) => void
 
@@ -15,13 +15,18 @@ export interface Connection {
   onData: (cb: Callback) => void
 }
 
-export const createConnection = (loopbackOnly = false): Promise<Connection> => {
-  const interfaces = loopbackOnly
-    ? [loopbackInterface]
-    : getNonLoopbackInterfaces()
-  const broadcastIps = interfaces.map(iface =>
-    getBroadcastIp(iface.address, iface.netmask)
-  )
+export interface ConnectionOptions {
+  loopbackOnly?: boolean
+}
+
+export const createConnection = ({
+  loopbackOnly = false,
+}: ConnectionOptions): Promise<Connection> => {
+  const broadcastIps = loopbackOnly
+    ? [LOOPBACK_IP]
+    : getNonLoopbackInterfaces().map(iface =>
+        getBroadcastIp(iface.address, iface.netmask)
+      )
   const socket = dgram.createSocket("udp4")
 
   const sendDatagram = (buffer: Buffer, ip: string): Promise<void> => {
