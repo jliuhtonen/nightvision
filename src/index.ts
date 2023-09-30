@@ -19,9 +19,10 @@ export interface ConnectionOptions {
   loopbackOnly?: boolean
 }
 
-export const createConnection = ({
-  loopbackOnly = false,
-}: ConnectionOptions): Promise<Connection> => {
+export const createConnection = (
+  opts: ConnectionOptions | undefined = undefined
+): Promise<Connection> => {
+  const loopbackOnly = opts?.loopbackOnly ?? false
   const broadcastIps = loopbackOnly
     ? [LOOPBACK_IP]
     : getNonLoopbackInterfaces().map(iface =>
