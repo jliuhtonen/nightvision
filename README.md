@@ -4,9 +4,12 @@
 
 Lenbrook Service [Discovery](https://youtu.be/xBTqRd09y3E) Protocol implementation for Node.js. See [specification](https://content-bluesound-com.s3.amazonaws.com/uploads/2022/07/BluOS-Custom-Integration-API-v1.5.pdf).
 
-This library provides you with a client and server implementation for the protocol that allows you to send and receive messages to discover supported devices and their capabilities.
+This library provides you with a client and server implementation for the protocol that allows you to send and receive messages to discover supported devices and their capabilities as well as announce and delete services.
 
-Currently, it cannot be used to advertise services as only queries can be sent. Contributions are welcome.
+As mentioned in the specification, the guideline is to send startup messages 7 times within certain time interval and delays.
+This is considered out of scope for this library.
+
+Also note that many BluOS devices might send the same UDP broadcast every n seconds in addition to query responses.
 
 ## Example
 
@@ -28,6 +31,3 @@ await conn.sendMessage({
   classIds: ["0001"],
 })
 ```
-
-As mentioned in the specification, the guideline is to send startup messages 7 times within certain time interval and delays.
-This is considered out of scope for this library.
