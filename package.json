@@ -1,6 +1,6 @@
 {
   "name": "@jliuhtonen/nightvision",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Implementation of Lenbrook Service Discovery Protocol",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
